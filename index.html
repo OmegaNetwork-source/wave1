@@ -369,7 +369,10 @@
         <h1>Claim Airdrop</h1>
         <p>Connect wallet to verify eligibility for Wave 1.</p>
 
-        <button class="main-btn" id="actionBtn" onclick="connectAndClaim()">Claim</button>
+        <button class="main-btn" id="actionBtn" onclick="connectAndClaim()">Claim 1000 tOmega</button>
+        <button class="secondary-btn"
+            style="width:100%; margin-top:10px; justify-content:center; border:1px solid #333; background:transparent;"
+            onclick="addTokenToWallet()">Add tOmega to Wallet</button>
         <div style="font-size: 11px; color: #666; margin-top: 8px;">(MetaMask Only)</div>
 
         <div id="status"></div>
@@ -534,20 +537,25 @@
 
                 const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
+                // Check if already claimed
                 status.innerText = "Checking eligibility...";
                 const claimed = await contract.hasClaimed(userAddress);
 
-                // FOR TESTING: You can comment this out if you've already claimed and want to see the card again
                 if (claimed) {
-                    showSuccess(); // If already claimed, just show success state for user experience? 
-                    // Or show error:
-                    // status.innerText = "Already claimed.";
-                    // btn.disabled = false;
-                    // return;
+                    console.log("User has already claimed according to contract.");
+                    status.innerText = "⚠️ Contract says you already claimed.";
 
-                    // Let's just show success so they can get the card
-                    status.innerText = "Already claimed! Showing badge...";
-                    setTimeout(showSuccess, 1000);
+                    // Create a link to view success card manually
+                    const link = document.createElement('a');
+                    link.innerText = " [View Receipt]";
+                    link.style.cursor = "pointer";
+                    link.style.color = "#fff";
+                    link.style.textDecoration = "underline";
+                    link.onclick = showSuccess;
+                    status.appendChild(link);
+
+                    btn.disabled = false;
+                    btn.innerText = 'Claim (Already Claimed)';
                     return;
                 }
 
@@ -591,6 +599,31 @@
             } catch (e) {
                 console.error(e);
                 alert('Capture failed');
+            }
+        }
+
+        async function addTokenToWallet() {
+            try {
+                const wasAdded = await window.ethereum.request({
+                    method: 'wallet_watchAsset',
+                    params: {
+                        type: 'ERC20',
+                        options: {
+                            address: '0x82C88F75d3DA75dF268cda532CeC8B101da8Fa51',
+                            symbol: 'tOmega',
+                            decimals: 18,
+                            // image: 'https://foo.io/token-image.svg', 
+                        },
+                    },
+                });
+
+                if (wasAdded) {
+                    console.log('Thanks for your interest!');
+                } else {
+                    console.log('Your loss!');
+                }
+            } catch (error) {
+                console.log(error);
             }
         }
     </script>
