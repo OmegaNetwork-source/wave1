@@ -608,82 +608,13 @@
             // Trigger confetti or something if desired, but card is fine
         }
 
-        async function shareTweet() {
-            const statusEl = document.getElementById('tweetStatus');
-            statusEl.innerText = '📤 Generating image...';
+        function shareTweet() {
+            // Generate random receipt ID (6-8 digits)
+            const receiptId = Math.floor(100000 + Math.random() * 900000).toString();
             
-            try {
-                // Generate the card image
-                const card = document.getElementById('pnlCard');
-                const canvas = await html2canvas(card, { backgroundColor: null, scale: 2 });
-                
-                // Convert canvas to blob
-                canvas.toBlob(async (blob) => {
-                    try {
-                        statusEl.innerText = '📤 Uploading image...';
-                        
-                        // Convert blob to base64
-                        const reader = new FileReader();
-                        reader.onloadend = async function() {
-                            const base64data = reader.result.split(',')[1];
-                            
-                            try {
-                                // Upload to imgur (anonymous upload)
-                                const imgurResponse = await fetch('https://api.imgur.com/3/image', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Authorization': 'Client-ID 546c25a59c58ad7', // Public anonymous upload client ID
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify({
-                                        image: base64data,
-                                        type: 'base64'
-                                    })
-                                });
-                                
-                                const imgurData = await imgurResponse.json();
-                                
-                                if (imgurData.success && imgurData.data && imgurData.data.link) {
-                                    const imageUrl = imgurData.data.link;
-                                    const text = `I just claimed my Omega Network Wave 1 airdrop! 🚀\n\nReceived: 1,000 tOmega\n\nMake me eligible for Wave 2! 👇\n\n${imageUrl}\n\n@omega_netw0rk #OmegaNetwork #Airdrop #Wave1`;
-                                    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
-                                    statusEl.innerHTML = '✅ Tweet opened with image link! Post to be eligible for Wave 2.';
-                                } else {
-                                    throw new Error('Imgur upload failed');
-                                }
-                            } catch (imgurError) {
-                                // Fallback: download image and open tweet with instructions
-                                const link = document.createElement('a');
-                                link.download = 'omega-airdrop-claim.png';
-                                link.href = canvas.toDataURL();
-                                link.click();
-                                
-                                const text = `I just claimed my Omega Network Wave 1 airdrop! 🚀\n\nReceived: 1,000 tOmega\n\n⚠️ IMPORTANT: Attach the downloaded image to this tweet to be eligible for Wave 2!\n\n@omega_netw0rk #OmegaNetwork #Airdrop #Wave1`;
-                                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
-                                statusEl.innerHTML = '✅ Image downloaded! Please attach it to your tweet for Wave 2 eligibility.';
-                            }
-                        };
-                        reader.readAsDataURL(blob);
-                    } catch (uploadError) {
-                        console.error('Upload error:', uploadError);
-                        // Fallback: download image and open tweet
-                        const link = document.createElement('a');
-                        link.download = 'omega-airdrop-claim.png';
-                        link.href = canvas.toDataURL();
-                        link.click();
-                        
-                        const text = `I just claimed my Omega Network Wave 1 airdrop! 🚀\n\nReceived: 1,000 tOmega\n\n⚠️ IMPORTANT: Attach the downloaded image to this tweet to be eligible for Wave 2!\n\n@omega_netw0rk #OmegaNetwork #Airdrop #Wave1`;
-                        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
-                        statusEl.innerHTML = '✅ Image downloaded! Please attach it to your tweet for Wave 2 eligibility.';
-                    }
-                }, 'image/png');
-            } catch (error) {
-                console.error('Error:', error);
-                statusEl.innerText = '❌ Error generating image. Try saving manually.';
-                // Fallback to text-only tweet
-                const text = `I just claimed my Omega Network Wave 1 airdrop! 🚀\n\nReceived: 1,000 tOmega\n\nMake me eligible for Wave 2!\n\n@omega_netw0rk #OmegaNetwork #Airdrop #Wave1`;
-                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
-            }
+            const text = `I Just claimed my tOmega Airdrop at: https://airdrop.omeganetwork.co/\n\nIm now eligble for Wave 2!!\n\nReceipt ID: ${receiptId}\n\n@omega_netw0rk`;
+            
+            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
         }
 
         async function downloadCard() {
