@@ -407,7 +407,7 @@
                     <div class="logo-area">
                         <div class="omega-logo">Ω</div>
                         <div>
-                            <div class="pair-name">OMEGA / AIRDROP</div>
+                            <div class="pair-name">tOmega Airdrop</div>
                             <div class="sub-text">Official Claim</div>
                         </div>
                     </div>
@@ -425,11 +425,16 @@
                     "I just claimed my airdrop, eligible for wave 2!"
                 </div>
 
+                <div style="background: rgba(29, 161, 242, 0.1); border: 1px solid rgba(29, 161, 242, 0.3); border-radius: 8px; padding: 12px; margin-top: 20px; text-align: center;">
+                    <div style="color: #1DA1F2; font-weight: 600; font-size: 13px; margin-bottom: 4px;">⚠️ Wave 2 Eligibility Required</div>
+                    <div style="color: #888; font-size: 11px;">You must tweet your claim card to be eligible for Wave 2 airdrop</div>
+                </div>
+
                 <div class="pnl-footer">
                     <div class="qr-section">
-                        <!-- Generic QR or link to site -->
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=OmegaWave1Claimed"
-                            class="qr-mock">
+                        <!-- QR code links to YouTube -->
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DdQw4w9WgXcQ%26list%3DRDdQw4w9WgXcQ%26start_radio%3D1"
+                            class="qr-mock" id="qrCodeImg">
                         <div style="font-size: 10px; color: #888; font-weight: 500;">
                             Scan to<br>Verify
                         </div>
@@ -444,13 +449,15 @@
         </div>
 
         <div class="action-row">
-            <button class="secondary-btn" style="background:#1DA1F2; border-color:#1DA1F2;" onclick="shareTweet()">
-                Tweet Claim
+            <button class="secondary-btn" style="background:#1DA1F2; border-color:#1DA1F2; font-weight: 700;" onclick="shareTweet()">
+                📢 Tweet for Wave 2 Eligibility
             </button>
             <button class="secondary-btn" onclick="downloadCard()">
                 Save Image
             </button>
         </div>
+        
+        <div id="tweetStatus" style="margin-top: 15px; font-size: 12px; color: #666; text-align: center; min-height: 20px;"></div>
     </div>
 
     <script>
@@ -601,9 +608,82 @@
             // Trigger confetti or something if desired, but card is fine
         }
 
-        function shareTweet() {
-            const text = `I just claimed my airdrop, eligible for wave 2! 🚀\n\n@omega_netw0rk #OmegaNetwork #Airdrop`;
-            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+        async function shareTweet() {
+            const statusEl = document.getElementById('tweetStatus');
+            statusEl.innerText = '📤 Generating image...';
+            
+            try {
+                // Generate the card image
+                const card = document.getElementById('pnlCard');
+                const canvas = await html2canvas(card, { backgroundColor: null, scale: 2 });
+                
+                // Convert canvas to blob
+                canvas.toBlob(async (blob) => {
+                    try {
+                        statusEl.innerText = '📤 Uploading image...';
+                        
+                        // Convert blob to base64
+                        const reader = new FileReader();
+                        reader.onloadend = async function() {
+                            const base64data = reader.result.split(',')[1];
+                            
+                            try {
+                                // Upload to imgur (anonymous upload)
+                                const imgurResponse = await fetch('https://api.imgur.com/3/image', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Authorization': 'Client-ID 546c25a59c58ad7', // Public anonymous upload client ID
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        image: base64data,
+                                        type: 'base64'
+                                    })
+                                });
+                                
+                                const imgurData = await imgurResponse.json();
+                                
+                                if (imgurData.success && imgurData.data && imgurData.data.link) {
+                                    const imageUrl = imgurData.data.link;
+                                    const text = `I just claimed my Omega Network Wave 1 airdrop! 🚀\n\nReceived: 1,000 tOmega\n\nMake me eligible for Wave 2! 👇\n\n${imageUrl}\n\n@omega_netw0rd #OmegaNetwork #Airdrop #Wave1`;
+                                    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+                                    statusEl.innerHTML = '✅ Tweet opened with image link! Post to be eligible for Wave 2.';
+                                } else {
+                                    throw new Error('Imgur upload failed');
+                                }
+                            } catch (imgurError) {
+                                // Fallback: download image and open tweet with instructions
+                                const link = document.createElement('a');
+                                link.download = 'omega-airdrop-claim.png';
+                                link.href = canvas.toDataURL();
+                                link.click();
+                                
+                                const text = `I just claimed my Omega Network Wave 1 airdrop! 🚀\n\nReceived: 1,000 tOmega\n\n⚠️ IMPORTANT: Attach the downloaded image to this tweet to be eligible for Wave 2!\n\n@omega_netw0rd #OmegaNetwork #Airdrop #Wave1`;
+                                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+                                statusEl.innerHTML = '✅ Image downloaded! Please attach it to your tweet for Wave 2 eligibility.';
+                            }
+                        };
+                        reader.readAsDataURL(blob);
+                    } catch (uploadError) {
+                        console.error('Upload error:', uploadError);
+                        // Fallback: download image and open tweet
+                        const link = document.createElement('a');
+                        link.download = 'omega-airdrop-claim.png';
+                        link.href = canvas.toDataURL();
+                        link.click();
+                        
+                        const text = `I just claimed my Omega Network Wave 1 airdrop! 🚀\n\nReceived: 1,000 tOmega\n\n⚠️ IMPORTANT: Attach the downloaded image to this tweet to be eligible for Wave 2!\n\n@omega_netw0rd #OmegaNetwork #Airdrop #Wave1`;
+                        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+                        statusEl.innerHTML = '✅ Image downloaded! Please attach it to your tweet for Wave 2 eligibility.';
+                    }
+                }, 'image/png');
+            } catch (error) {
+                console.error('Error:', error);
+                statusEl.innerText = '❌ Error generating image. Try saving manually.';
+                // Fallback to text-only tweet
+                const text = `I just claimed my Omega Network Wave 1 airdrop! 🚀\n\nReceived: 1,000 tOmega\n\nMake me eligible for Wave 2!\n\n@omega_netw0rd #OmegaNetwork #Airdrop #Wave1`;
+                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+            }
         }
 
         async function downloadCard() {
